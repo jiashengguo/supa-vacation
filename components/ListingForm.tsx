@@ -7,6 +7,9 @@ import { toast } from 'react-hot-toast';
 import { Formik, Form } from 'formik';
 import Input from '@/components/Input';
 import ImageUpload from '@/components/ImageUpload';
+import {Prisma as Args} from '@zenstackhq/runtime/types'
+import { useCurrentUser } from '../lib/context';
+
 
 const ListingSchema = Yup.object().shape({
   title: Yup.string().trim().required(),
@@ -21,9 +24,10 @@ const ListingForm = ({
   initialValues = null,
   redirectPath = '',
   buttonText = 'Submit',
-  onSubmit = () => null,
+  onSubmit = (args:any) => {},
 }) => {
   const router = useRouter();
+  const user = useCurrentUser();
 
   const [disabled, setDisabled] = useState(false);
   const [imageUrl, setImageUrl] = useState(initialValues?.image ?? '');
@@ -52,9 +56,9 @@ const ListingForm = ({
       setDisabled(true);
       toastId = toast.loading('Submitting...');
       // Submit data
-      if (typeof onSubmit === 'function') {
-        await onSubmit({ ...values, image: imageUrl });
-      }
+ 
+      await onSubmit({data:{ ...values, image: imageUrl, ownerId: user.id }});
+      
       toast.success('Successfully submitted', { id: toastId });
       // Redirect user
       if (redirectPath) {

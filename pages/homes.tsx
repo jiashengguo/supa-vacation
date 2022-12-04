@@ -1,12 +1,14 @@
 import { getSession } from 'next-auth/react';
 import Layout from '@/components/Layout';
 import Grid from '@/components/Grid';
-import { prisma } from '@/lib/prisma';
+
+
+import service from '@zenstackhq/runtime/server';
+
 
 export async function getServerSideProps(context) {
   // Check if user is authenticated
   const session = await getSession(context);
-
   // If not, redirect to the homepage
   if (!session) {
     return {
@@ -17,12 +19,12 @@ export async function getServerSideProps(context) {
     };
   }
 
-  // Get all homes from the authenticated user
-  const homes = await prisma.home.findMany({
-    where: { owner: { email: session.user.email } },
-    orderBy: { createdAt: 'desc' },
-  });
-
+  //@ZenStack: queryContext parameter for passing in the current login user. 
+  //Then service find API would guarantee to return the correct data obey access policies defined in ZModel.
+  const queryContext = { user: session?.user };
+  const homes = await service.home.find(queryContext, {where:{
+    owner:session.user
+  }});
   // Pass the data to the Homes component
   return {
     props: {

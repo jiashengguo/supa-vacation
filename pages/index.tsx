@@ -1,10 +1,14 @@
 import Layout from '@/components/Layout';
 import Grid from '@/components/Grid';
-import { prisma } from '@/lib/prisma';
+import service from '@zenstackhq/runtime/server';
+import { getSession } from 'next-auth/react';
 
-export async function getServerSideProps() {
+export async function getServerSideProps(context) {
+  // Check if user is authenticated
+  const session = await getSession(context);
+  const queryContext = { user: session?.user };
   // Get all homes
-  const homes = await prisma.home.findMany();
+  const homes = await service.home.find(queryContext);
   // Pass the data to the Home page
   return {
     props: {

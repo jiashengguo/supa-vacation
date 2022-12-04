@@ -11,7 +11,7 @@ const ImageUpload = ({
   objectFit = 'cover',
   accept = '.png, .jpg, .jpeg, .gif',
   sizeLimit = 10 * 1024 * 1024, // 10MB
-  onChangePicture = () => null,
+  onChangePicture = (image) => null,
 }) => {
   const pictureRef = useRef();
 

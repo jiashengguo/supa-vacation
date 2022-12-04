@@ -3,14 +3,19 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Layout from '@/components/Layout';
-import { prisma } from '@/lib/prisma';
-import axios from 'axios';
 import toast from 'react-hot-toast';
+import service from '@zenstackhq/runtime/server';
+import { Home } from '@zenstackhq/runtime/types';
+import { useHome } from '@zenstackhq/runtime/client';
 
-const ListedHome = (home = null) => {
+
+const ListedHome = (home:Home) => {
   const router = useRouter();
 
   const { data: session } = useSession();
+
+  //@ZenStack delete hook
+  const { del} = useHome();
 
   const [isOwner, setIsOwner] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -19,8 +24,7 @@ const ListedHome = (home = null) => {
     (async () => {
       if (session?.user) {
         try {
-          const owner = await axios.get(`/api/homes/${home.id}/owner`);
-          setIsOwner(owner?.id === session.user.id);
+          setIsOwner(home.ownerId === session.user.id);
         } catch (e) {
           setIsOwner(false);
         }
@@ -33,8 +37,8 @@ const ListedHome = (home = null) => {
     try {
       toastId = toast.loading('Deleting...');
       setDeleting(true);
-      // Delete home from DB
-      await axios.delete(`/api/homes/${home.id}`);
+      // @ZenStack delete home
+      await del(home.id)
       // Redirect user
       toast.success('Successfully deleted', { id: toastId });
       router.push('/homes');
@@ -110,7 +114,7 @@ const ListedHome = (home = null) => {
 
 export async function getStaticPaths() {
   // Get all homes IDs from the database
-  const homes = await prisma.home.findMany({
+  const homes = await service.db.home.findMany({
     select: { id: true },
   });
 
@@ -124,7 +128,7 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   // Get the current home from the database
-  const home = await prisma.home.findUnique({
+  const home = await service.db.home.findUnique({
     where: { id: params.id },
   });
 

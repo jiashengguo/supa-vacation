@@ -7,6 +7,8 @@ import nodemailer from 'nodemailer';
 import Handlebars from 'handlebars';
 import { readFileSync } from 'fs';
 import path from 'path';
+import {Adapter} from '@zenstackhq/next-auth';
+import service from '@zenstackhq/runtime/server';
 
 // Email sender
 const transporter = nodemailer.createTransport({
@@ -60,7 +62,7 @@ const sendWelcomeEmail = async ({ user }) => {
   }
 };
 
-export default NextAuth({
+export const authOptions = {
   pages: {
     signIn: '/',
     signOut: '/',
@@ -77,6 +79,23 @@ export default NextAuth({
       clientSecret: process.env.GOOGLE_SECRET,
     }),
   ],
-  adapter: PrismaAdapter(prisma),
+  session: {
+    strategy:'jwt'
+  },
+  // use the ZenStack next-auth adapter for user identity persistence
+  adapter: Adapter(service),
+  callbacks: {
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.sub,
+        },
+      };
+    },
+  },
   events: { createUser: sendWelcomeEmail },
-});
+};
+
+export default NextAuth(authOptions);

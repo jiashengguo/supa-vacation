@@ -2,6 +2,7 @@ import { getSession } from 'next-auth/react';
 import axios from 'axios';
 import Layout from '@/components/Layout';
 import ListingForm from '@/components/ListingForm';
+import { useHome } from "@zenstackhq/runtime/client";
 
 export async function getServerSideProps(context) {
   // Check if user is authenticated
@@ -23,8 +24,8 @@ export async function getServerSideProps(context) {
 }
 
 const Create = () => {
-  const addHome = data => axios.post('/api/homes', data);
-
+  //@ZenStack create hook
+  const { create: createHome } = useHome();
   return (
     <Layout>
       <div className="max-w-screen-sm mx-auto">
@@ -36,7 +37,7 @@ const Create = () => {
           <ListingForm
             buttonText="Add home"
             redirectPath="/"
-            onSubmit={addHome}
+            onSubmit={createHome}
           />
         </div>
       </div>
